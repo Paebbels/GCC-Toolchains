@@ -39,9 +39,9 @@ jobs:
       - name: Extract files
         run: |
           tar -xzf binutils-${{ matrix.binutils }}.tar.gz
+          ls -lAh
 #          tar -xzf gcc-${{ matrix.gcc }}.tar.gz
 #          tar -xzf newlib-${{ matrix.newlib }}.tar.gz
-          ls -lAh
 
       - name: Make directory structure
         run: |
