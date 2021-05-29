@@ -2,17 +2,19 @@ name: GCC Toolchain for AArch64 with NewLib
 
 on: [ push ]
 
+env:
+  BUILD_DIR: build
+  TARGET: aarch64-eabi
+  PREFIX: /opt/${TARGET}
+
 jobs:
   binutils:
     name: binutils
     runs-on: unbuntu-latest
 
     env:
-      BUILD_DIR: build
       BINUTILS_DIR: binutils
       BINUTILS_VERSION: 2.36.1
-      TARGET: aarch64-eabi
-      PREFIX: /opt/${TARGET}
 
     steps:
       - name: Download binutils ${BINUTILS_VERSION}
@@ -42,11 +44,8 @@ jobs:
     needs: [ binutils ]
 
     env:
-      BUILD_DIR: build
       GCC_DIR: gcc
       GCC_VERSION: 11.1.0
-      TARGET: aarch64-eabi
-      PREFIX: /opt/${TARGET}
 
     steps:
       - name: Download GCC ${GCC_VERSION}
@@ -76,11 +75,8 @@ jobs:
     needs: [ binutils, gcc-bootstrap ]
 
     env:
-      BUILD_DIR: build
       NEWLIB_DIR: newlib
       NEWLIB_VERSION: 4.1.0
-      TARGET: aarch64-eabi
-      PREFIX: /opt/${TARGET}
 
     steps:
       - name: Download newlib ${NEWLIB_VERSION}
@@ -103,18 +99,15 @@ jobs:
       - name: Install
         run:  make install
 
-GCC-newlib:
+  gcc-newlib:
     name: GNU Compiler Collection with newlib
     runs-on: unbuntu-latest
 
     needs: [ binutils, gcc-bootstrap, newlib ]
 
     env:
-      BUILD_DIR: build
       GCC_DIR: gcc
       GCC_VERSION: 11.1.0
-      TARGET: aarch64-eabi
-      PREFIX: /opt/${TARGET}
 
     steps:
       - name: Download GCC ${GCC_VERSION}
