@@ -54,22 +54,30 @@ jobs:
           ../../binutils-${BINUTILS_VERSION}/configure --target=${TARGET} --prefix=${PREFIX} --enable-plugins
 
       - name: Build binutils ${{ env.BINUTILS_VERSION }}
-        run:  make
+        run: |
+          cd ${BUILD_DIR}/${BINUTILS_DIR}
+          make
 
       - name: Install binutils ${{ env.BINUTILS_VERSION }}
-        run:  make install
+        run: |
+          cd ${BUILD_DIR}/${BINUTILS_DIR}
+          make install
 
       - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
           cd ${BUILD_DIR}/${GCC_DIR}
           ls -lAh ../../binutils-${GCC_VERSION}
-          ../../gcc-${GCC_VERSION}/configure --target=${TARGET} --prefix=${PREFIX} --without-headers --with-newlib --with-gnu-as --with-gnu-ld
+          ../../gcc-${GCC_VERSION}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c,c++ --without-headers --with-newlib --with-gnu-as --with-gnu-ld
 
       - name: Build GCC ${{ env.GCC_VERSION }}
-        run:  make all-gcc
+        run: |
+          cd ${BUILD_DIR}/${GCC_DIR}
+          make all-gcc
 
       - name: Install GCC ${{ env.GCC_VERSION }}
-        run:  make install-gcc
+        run: |
+          cd ${BUILD_DIR}/${GCC_DIR}
+          make install-gcc
 
       - name: Configure newlib ${{ env.NEWLIB_VERSION }}
         run: |
@@ -78,10 +86,14 @@ jobs:
           ../../newlib-${NEWLIB_VERSION}/configure --target=${TARGET} --prefix=${PREFIX}
 
       - name: Build newlib ${{ env.NEWLIB_VERSION }}
-        run:  make all
+        run: |
+          cd ${BUILD_DIR}/${NEWLIB_DIR}
+          make all
 
       - name: Install newlib ${{ env.NEWLIB_VERSION }}
-        run:  make install
+        run: |
+          cd ${BUILD_DIR}/${NEWLIB_DIR}
+          make install
 
       - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
@@ -90,7 +102,11 @@ jobs:
           ../../gcc-${GCC_VERSION}/configure --target=$TARGET --prefix=$PREFIX --with-newlib --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
       - name: Build GCC ${{ env.GCC_VERSION }}
-        run:  make all
+        run: |
+          cd ${BUILD_DIR}/${GCC_DIR}
+          make all
 
       - name: Install GCC ${{ env.GCC_VERSION }}
-        run:  make install
+        run: |
+          cd ${BUILD_DIR}/${GCC_DIR}
+          make install
