@@ -1,0 +1,138 @@
+name: GCC Toolchain for AArch64 with NewLib
+
+on: [ push ]
+
+jobs:
+  binutils:
+    name: binutils
+    runs-on: unbuntu-latest
+
+    env:
+      BUILD_DIR: build
+      BINUTILS_DIR: binutils
+      BINUTILS_VERSION: 2.36.1
+      TARGET: aarch64-eabi
+      PREFIX: /opt/${TARGET}
+
+    steps:
+      - name: Download binutils ${BINUTILS_VERSION}
+        run: curl https://mirrors.syringanetworks.net/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
+
+      - name: Extract files
+        run:  tar -xzf binutils-${BINUTILS_VERSION}.tar.gz
+
+      - name: Make directory structure
+        run:  mkdir -p ${BUILD_DIR}/${BINUTILS_DIR}
+
+      - name: Configure
+        run: |
+          cd ${BUILD_DIR}/${BINUTILS_DIR}
+          ../binutils-${BINUTILS_VERSION}/configure --target=${TARGET} --prefix=${PREFIX}
+
+      - name: Build
+        run:  make all
+
+      - name: Install
+        run:  make install
+
+  gcc-bootstrap:
+    name: GNU Compiler Collection (bootstrap)
+    runs-on: unbuntu-latest
+
+    needs: [ binutils ]
+
+    env:
+      BUILD_DIR: build
+      GCC_DIR: gcc
+      GCC_VERSION: 11.1.0
+      TARGET: aarch64-eabi
+      PREFIX: /opt/${TARGET}
+
+    steps:
+      - name: Download GCC ${GCC_VERSION}
+        run: curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
+
+      - name: Extract files
+        run: tar -xzf gcc-${GCC_VERSION}.tar.gz
+
+      - name: Make directory structure
+        run: mkdir -p ${BUILD_DIR}/${GCC_DIR}
+
+      - name: Configure
+        run: |
+          cd ${BUILD_DIR}/${GCC_DIR}
+          ../gcc-${GCC_VERSION}/configure --target=${TARGET} --prefix=${PREFIX} --without-headers --with-newlib --with-gnu-as --with-gnu-ld
+
+      - name: Build
+        run:  make all-gcc
+
+      - name: Install
+        run:  make install-gcc
+
+  newlib:
+    name: newlib
+    runs-on: unbuntu-latest
+
+    needs: [ binutils, gcc-bootstrap ]
+
+    env:
+      BUILD_DIR: build
+      NEWLIB_DIR: newlib
+      NEWLIB_VERSION: 4.1.0
+      TARGET: aarch64-eabi
+      PREFIX: /opt/${TARGET}
+
+    steps:
+      - name: Download newlib ${NEWLIB_VERSION}
+        run: curl ftp://sourceware.org/pub/newlib/newlib-${NEWLIB_VERSION}.tar.gz
+
+      - name: Extract files
+        run: tar -xzf newlib-${NEWLIB_VERSION}.tar.gz
+
+      - name: Make directory structure
+        run: mkdir -p ${BUILD_DIR}/${NEWLIB_DIR}
+
+      - name: Configure
+        run: |
+          cd ${BUILD_DIR}/${GCC_DIR}
+          ../newlib-${NEWLIB_VERSION}/configure --target=${TARGET} --prefix=${PREFIX}
+
+      - name: Build
+        run:  make all
+
+      - name: Install
+        run:  make install
+
+GCC-newlib:
+    name: GNU Compiler Collection with newlib
+    runs-on: unbuntu-latest
+
+    needs: [ binutils, gcc-bootstrap, newlib ]
+
+    env:
+      BUILD_DIR: build
+      GCC_DIR: gcc
+      GCC_VERSION: 11.1.0
+      TARGET: aarch64-eabi
+      PREFIX: /opt/${TARGET}
+
+    steps:
+      - name: Download GCC ${GCC_VERSION}
+        run: curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
+
+      - name: Extract files
+        run: tar -xzf gcc-${GCC_VERSION}.tar.gz
+
+      - name: Make directory structure
+        run: mkdir -p ${BUILD_DIR}/${GCC_DIR}
+
+      - name: Configure
+        run: |
+          cd ${BUILD_DIR}/${GCC_DIR}
+          ../gcc-${GCC_VERSION}/configure --target=$TARGET --prefix=$PREFIX --with-newlib --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
+
+      - name: Build
+        run:  make all
+
+      - name: Install
+        run:  make install
