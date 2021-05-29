@@ -2,9 +2,6 @@ name: GCC Toolchain for AArch64 with NewLib
 
 on: [ push ]
 
-env:
-  BUILD_DIR: build
-
 jobs:
   binutils:
     name: binutils
@@ -16,6 +13,7 @@ jobs:
           - { arch: aarch64, binutils: 2.36.1, gcc: 11.1.0, newlib: 4.1.0 }
 
     env:
+      BUILD_DIR:           build
       TARGET:              ${{ matrix.arch }}-none-eabi
       PREFIX:              /opt/cross
 
@@ -23,10 +21,10 @@ jobs:
       BINUTILS_BUILD_DIR:  build/binutils
       
       GCC_SOURCE_DIR:      gcc-${{ matrix.gcc }}
-      GCC_BUILD_DIR:       ${{ BUILD_DIR }}/gcc
+      GCC_BUILD_DIR:       ${BUILD_DIR}/gcc
       
       NEWLIB_SOURCE_DIR:   newlib-${{ matrix.newlib }}
-      NEWLIB_BUILD_DIR:    ${{ BUILD_DIR }}/newlib
+      NEWLIB_BUILD_DIR:    ${{ env.BUILD_DIR }}/newlib
 
     steps:
       - name: Download binutils ${{ matrix.binutils }}
