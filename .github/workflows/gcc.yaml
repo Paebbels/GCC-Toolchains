@@ -4,7 +4,6 @@ on: [ push ]
 
 env:
   BUILD_DIR: build
-  TARGET: aarch64-eabi
   PREFIX: /opt/${TARGET}
 
 jobs:
@@ -14,99 +13,100 @@ jobs:
 
     strategy:
       matrix:
-        binutils: [ 2.36.1 ]
-        gcc:      [ 11.1.0 ]
-        newlib:   [ 4.1.0 ]
+        include:
+          - { arch: aarch64, binutils: 2.36.1, gcc: 11.1.0, newlib: 4.1.0 }
 
     env:
-      BINUTILS_DIR:     binutils
-      BINUTILS_VERSION: ${{ matrix.binutils }}
-      GCC_DIR:          gcc
-      GCC_VERSION:      ${{ matrix.gcc }}
-      NEWLIB_DIR:       newlib
-      NEWLIB_VERSION:   ${{ matrix.newlib }}
+      TARGET:              elf64-${{ matrix.arch }}
+      BINUTILS_SOURCE_DIR: binutils-${{ matrix.binutils }}
+      BINUTILS_BUILD_DIR:  ${BUILD_DIR}/binutils
+      
+      GCC_SOURCE_DIR: binutils-${{ matrix.gcc }}
+      GCC_BUILD_DIR:      ${BUILD_DIR}/gcc
+      
+      NEWLIB_SOURCE_DIR: binutils-${{ matrix.newlib }}
+      NEWLIB_BUILD_DIR:   ${BUILD_DIR}/newlib
 
     steps:
-      - name: Download binutils ${{ env.BINUTILS_VERSION }}
-        run: curl https://mirrors.syringanetworks.net/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz --output binutils-${BINUTILS_VERSION}.tar.gz
+      - name: Download binutils ${{ matrix.binutils }}
+        run: curl https://mirrors.syringanetworks.net/gnu/binutils/binutils-${{ matrix.binutils }}.tar.gz --output binutils-${{ matrix.binutils }}.tar.gz
       - name: Download GCC ${{ env.GCC_VERSION }}
-        run: curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz --output gcc-${GCC_VERSION}.tar.gz
+        run: curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${{ matrix.gcc }}/gcc-${{ matrix.gcc }}.tar.gz --output gcc-${{ matrix.gcc }}.tar.gz
       - name: Download newlib ${{ env.NEWLIB_VERSION }}
-        run: curl ftp://sourceware.org/pub/newlib/newlib-${NEWLIB_VERSION}.tar.gz --output newlib-${NEWLIB_VERSION}.tar.gz
+        run: curl ftp://sourceware.org/pub/newlib/newlib-${{ matrix.newlib }}.tar.gz --output newlib-${{ matrix.newlib }}.tar.gz
 
       - name: Extract files
         run: |
-          tar -xzf binutils-${BINUTILS_VERSION}.tar.gz
-          tar -xzf gcc-${GCC_VERSION}.tar.gz
-          tar -xzf newlib-${NEWLIB_VERSION}.tar.gz
+          tar -xzf binutils-${{ matrix.binutils }}.tar.gz
+          tar -xzf gcc-${{ matrix.gcc }}.tar.gz
+          tar -xzf newlib-${{ matrix.newlib }}.tar.gz
           ls -lAh
 
       - name: Make directory structure
         run: |
-          mkdir -p ${BUILD_DIR}/${BINUTILS_DIR}
-          mkdir -p ${BUILD_DIR}/${GCC_DIR}
-          mkdir -p ${BUILD_DIR}/${NEWLIB_DIR}
+          mkdir -p ${BINUTILS_BUILD_DIR}
+          mkdir -p ${GCC_BUILD_DIR}
+          mkdir -p ${NEWLIB_BUILD_DIR}
 
       - name: Configure binutils ${{ env.BINUTILS_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${BINUTILS_DIR}
-          ls -lAh ../../binutils-${BINUTILS_VERSION}
-          ../../binutils-${BINUTILS_VERSION}/configure --target=${TARGET} --prefix=${PREFIX} --enable-plugins
+          cd ${BINUTILS_BUILD_DIR}
+          ../../${BINUTILS_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX} --enable-plugins
 
       - name: Build binutils ${{ env.BINUTILS_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${BINUTILS_DIR}
+          cd ${BINUTILS_BUILD_DIR}
           make
 
       - name: Install binutils ${{ env.BINUTILS_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${BINUTILS_DIR}
+          cd ${BINUTILS_BUILD_DIR}
           make install
 
       - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${GCC_DIR}
-          ls -lAh ../../binutils-${GCC_VERSION}
-          ../../gcc-${GCC_VERSION}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c,c++ --without-headers --with-newlib --with-gnu-as --with-gnu-ld
+          cd ${GCC_BUILD_DIR}
+          ls -lAh ../../binutils-${{ matrix.gcc }}
+          ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX} --enable-languages=c,c++ --without-headers --with-newlib --with-gnu-as --with-gnu-ld
 
       - name: Build GCC ${{ env.GCC_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${GCC_DIR}
+          cd ${GCC_BUILD_DIR}
           make all-gcc
 
       - name: Install GCC ${{ env.GCC_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${GCC_DIR}
+          cd ${GCC_BUILD_DIR}
           make install-gcc
 
       - name: Configure newlib ${{ env.NEWLIB_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${GCC_DIR}
-          ls -lAh ../../binutils-${NEWLIB_VERSION}
-          ../../newlib-${NEWLIB_VERSION}/configure --target=${TARGET} --prefix=${PREFIX}
+          cd ${GCC_BUILD_DIR}
+          ls -lAh ../../binutils-${{ matrix.newlib }}
+          ../../${NEWLIB_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX}
 
       - name: Build newlib ${{ env.NEWLIB_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${NEWLIB_DIR}
+          cd ${NEWLIB_BUILD_DIR}
           make all
 
       - name: Install newlib ${{ env.NEWLIB_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${NEWLIB_DIR}
+          cd ${NEWLIB_BUILD_DIR}
           make install
 
       - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${GCC_DIR}
-          ls -lAh ../../gcc-${GCC_VERSION}
-          ../../gcc-${GCC_VERSION}/configure --target=$TARGET --prefix=$PREFIX --with-newlib --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
+          cd ${GCC_BUILD_DIR}
+          ls -lAh ../../gcc-${{ matrix.gcc }}
+          ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=$PREFIX --with-newlib --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
       - name: Build GCC ${{ env.GCC_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${GCC_DIR}
+          cd ${GCC_BUILD_DIR}
           make all
 
       - name: Install GCC ${{ env.GCC_VERSION }}
         run: |
-          cd ${BUILD_DIR}/${GCC_DIR}
+          cd ${GCC_BUILD_DIR}
           make install
