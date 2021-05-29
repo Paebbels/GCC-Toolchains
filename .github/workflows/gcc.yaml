@@ -12,120 +12,80 @@ jobs:
     name: binutils
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        binutils: [ 2.36.1 ]
+        gcc:      [ 11.1.0 ]
+        newlib:   [ 4.1.0 ]
+
     env:
-      BINUTILS_DIR: binutils
-      BINUTILS_VERSION: 2.36.1
+      BINUTILS_DIR:     binutils
+      BINUTILS_VERSION: ${{ matrix.binutils }}
+      GCC_DIR:          gcc
+      GCC_VERSION:      ${{ matrix.gcc }}
+      NEWLIB_DIR:       newlib
+      NEWLIB_VERSION:   ${{ matrix.newlib }}
 
     steps:
-      - name: Download binutils ${BINUTILS_VERSION}
-        run: curl https://mirrors.syringanetworks.net/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
+      - name: Download binutils ${{ env.BINUTILS_VERSION }}
+        run: curl https://mirrors.syringanetworks.net/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz --output binutils-${BINUTILS_VERSION}.tar.gz
+      - name: Download GCC ${{ env.GCC_VERSION }}
+        run: curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz --output gcc-${GCC_VERSION}.tar.gz
+      - name: Download newlib ${{ env.NEWLIB_VERSION }}
+        run: curl ftp://sourceware.org/pub/newlib/newlib-${NEWLIB_VERSION}.tar.gz --output newlib-${NEWLIB_VERSION}.tar.gz
 
       - name: Extract files
-        run:  tar -xzf binutils-${BINUTILS_VERSION}.tar.gz
+        run: |
+          tar -xzf binutils-${BINUTILS_VERSION}.tar.gz
+          tar -xzf gcc-${GCC_VERSION}.tar.gz
+          tar -xzf newlib-${NEWLIB_VERSION}.tar.gz
 
       - name: Make directory structure
-        run:  mkdir -p ${BUILD_DIR}/${BINUTILS_DIR}
+        run: |
+          mkdir -p ${BUILD_DIR}/${BINUTILS_DIR}
+          mkdir -p ${BUILD_DIR}/${GCC_DIR}
+          mkdir -p ${BUILD_DIR}/${NEWLIB_DIR}
 
-      - name: Configure
+      - name: Configure binutils ${{ env.BINUTILS_VERSION }}
         run: |
           cd ${BUILD_DIR}/${BINUTILS_DIR}
           ../binutils-${BINUTILS_VERSION}/configure --target=${TARGET} --prefix=${PREFIX}
 
-      - name: Build
+      - name: Build binutils ${{ env.BINUTILS_VERSION }}
         run:  make all
 
-      - name: Install
+      - name: Install binutils ${{ env.BINUTILS_VERSION }}
         run:  make install
 
-  gcc-bootstrap:
-    name: GNU Compiler Collection (bootstrap)
-    runs-on: ubuntu-latest
-
-    needs: [ binutils ]
-
-    env:
-      GCC_DIR: gcc
-      GCC_VERSION: 11.1.0
-
-    steps:
-      - name: Download GCC ${GCC_VERSION}
-        run: curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
-
-      - name: Extract files
-        run: tar -xzf gcc-${GCC_VERSION}.tar.gz
-
-      - name: Make directory structure
-        run: mkdir -p ${BUILD_DIR}/${GCC_DIR}
-
-      - name: Configure
+      - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
           cd ${BUILD_DIR}/${GCC_DIR}
           ../gcc-${GCC_VERSION}/configure --target=${TARGET} --prefix=${PREFIX} --without-headers --with-newlib --with-gnu-as --with-gnu-ld
 
-      - name: Build
+      - name: Build GCC ${{ env.GCC_VERSION }}
         run:  make all-gcc
 
-      - name: Install
+      - name: Install GCC ${{ env.GCC_VERSION }}
         run:  make install-gcc
 
-  newlib:
-    name: newlib
-    runs-on: ubuntu-latest
-
-    needs: [ binutils, gcc-bootstrap ]
-
-    env:
-      NEWLIB_DIR: newlib
-      NEWLIB_VERSION: 4.1.0
-
-    steps:
-      - name: Download newlib ${NEWLIB_VERSION}
-        run: curl ftp://sourceware.org/pub/newlib/newlib-${NEWLIB_VERSION}.tar.gz
-
-      - name: Extract files
-        run: tar -xzf newlib-${NEWLIB_VERSION}.tar.gz
-
-      - name: Make directory structure
-        run: mkdir -p ${BUILD_DIR}/${NEWLIB_DIR}
-
-      - name: Configure
+      - name: Configure newlib ${{ env.NEWLIB_VERSION }}
         run: |
           cd ${BUILD_DIR}/${GCC_DIR}
           ../newlib-${NEWLIB_VERSION}/configure --target=${TARGET} --prefix=${PREFIX}
 
-      - name: Build
+      - name: Build newlib ${{ env.NEWLIB_VERSION }}
         run:  make all
 
-      - name: Install
+      - name: Install newlib ${{ env.NEWLIB_VERSION }}
         run:  make install
 
-  gcc-newlib:
-    name: GNU Compiler Collection with newlib
-    runs-on: ubuntu-latest
-
-    needs: [ binutils, gcc-bootstrap, newlib ]
-
-    env:
-      GCC_DIR: gcc
-      GCC_VERSION: 11.1.0
-
-    steps:
-      - name: Download GCC ${GCC_VERSION}
-        run: curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.gz
-
-      - name: Extract files
-        run: tar -xzf gcc-${GCC_VERSION}.tar.gz
-
-      - name: Make directory structure
-        run: mkdir -p ${BUILD_DIR}/${GCC_DIR}
-
-      - name: Configure
+      - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
           cd ${BUILD_DIR}/${GCC_DIR}
           ../gcc-${GCC_VERSION}/configure --target=$TARGET --prefix=$PREFIX --with-newlib --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
-      - name: Build
+      - name: Build GCC ${{ env.GCC_VERSION }}
         run:  make all
 
-      - name: Install
+      - name: Install GCC ${{ env.GCC_VERSION }}
         run:  make install
