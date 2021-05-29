@@ -4,7 +4,6 @@ on: [ push ]
 
 env:
   BUILD_DIR: build
-  PREFIX: /opt/${TARGET}
 
 jobs:
   binutils:
@@ -18,15 +17,16 @@ jobs:
 
     env:
       TARGET:              elf64-${{ matrix.arch }}
+      PREFIX:              /opt/cross
 
       BINUTILS_SOURCE_DIR: binutils-${{ matrix.binutils }}
-      BINUTILS_BUILD_DIR:  ${{ env.BUILD_DIR }}/binutils
+      BINUTILS_BUILD_DIR:  $BUILD_DIR/binutils
       
       GCC_SOURCE_DIR:      binutils-${{ matrix.gcc }}
-      GCC_BUILD_DIR:       ${{ env.BUILD_DIR }}/gcc
+      GCC_BUILD_DIR:       $BUILD_DIR/gcc
       
       NEWLIB_SOURCE_DIR:   binutils-${{ matrix.newlib }}
-      NEWLIB_BUILD_DIR:    ${{ env.BUILD_DIR }}/newlib
+      NEWLIB_BUILD_DIR:    $BUILD_DIR/newlib
 
     steps:
       - name: Download binutils ${{ matrix.binutils }}
