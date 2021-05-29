@@ -29,6 +29,10 @@ jobs:
       NEWLIB_BUILD_DIR:    build/newlib
 
     steps:
+      - name: Install build dependencies
+        run: |
+          apt-get install gmp mpfr mpc
+    
       - name: Download binutils ${{ matrix.binutils }}
         run: curl https://mirrors.syringanetworks.net/gnu/binutils/binutils-${{ matrix.binutils }}.tar.gz --output binutils-${{ matrix.binutils }}.tar.gz
       - name: Download GCC ${{ env.GCC_VERSION }}
@@ -67,7 +71,7 @@ jobs:
       - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
           cd ${GCC_BUILD_DIR}
-          ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX} --enable-languages=c,c++ --without-headers --with-newlib --with-gnu-as --with-gnu-ld
+          ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX} --enable-languages=c --without-headers --with-newlib --with-gnu-as --with-gnu-ld
 
       - name: Build GCC ${{ env.GCC_VERSION }}
         run: |
@@ -97,7 +101,7 @@ jobs:
       - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
           cd ${GCC_BUILD_DIR}
-          ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=$PREFIX --with-newlib --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
+          ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=$PREFIX --enable-languages=c,c++ --with-newlib --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
       - name: Build GCC ${{ env.GCC_VERSION }}
         run: |
