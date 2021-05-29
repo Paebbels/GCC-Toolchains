@@ -23,10 +23,10 @@ jobs:
       BINUTILS_BUILD_DIR:  build/binutils
       
       GCC_SOURCE_DIR:      gcc-${{ matrix.gcc }}
-      GCC_BUILD_DIR:       "${{ env.BUILD_DIR }}/gcc"
+      GCC_BUILD_DIR:       build/gcc
       
       NEWLIB_SOURCE_DIR:   newlib-${{ matrix.newlib }}
-      NEWLIB_BUILD_DIR:    "${BUILD_DIR}/newlib"
+      NEWLIB_BUILD_DIR:    build/newlib
 
     steps:
       - name: Download binutils ${{ matrix.binutils }}
