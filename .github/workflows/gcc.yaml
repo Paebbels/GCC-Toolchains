@@ -39,12 +39,14 @@ jobs:
           tar -xzf binutils-${BINUTILS_VERSION}.tar.gz
           tar -xzf gcc-${GCC_VERSION}.tar.gz
           tar -xzf newlib-${NEWLIB_VERSION}.tar.gz
+          ls -lAh
 
       - name: Make directory structure
         run: |
           mkdir -p ${BUILD_DIR}/${BINUTILS_DIR}
           mkdir -p ${BUILD_DIR}/${GCC_DIR}
           mkdir -p ${BUILD_DIR}/${NEWLIB_DIR}
+          cd ${BUILD_DIR} && ls -lAh && cd -
 
       - name: Configure binutils ${{ env.BINUTILS_VERSION }}
         run: |
