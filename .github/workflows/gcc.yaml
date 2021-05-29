@@ -10,7 +10,7 @@ env:
 jobs:
   binutils:
     name: binutils
-    runs-on: unbuntu-latest
+    runs-on: ubuntu-latest
 
     env:
       BINUTILS_DIR: binutils
@@ -39,7 +39,7 @@ jobs:
 
   gcc-bootstrap:
     name: GNU Compiler Collection (bootstrap)
-    runs-on: unbuntu-latest
+    runs-on: ubuntu-latest
 
     needs: [ binutils ]
 
@@ -70,7 +70,7 @@ jobs:
 
   newlib:
     name: newlib
-    runs-on: unbuntu-latest
+    runs-on: ubuntu-latest
 
     needs: [ binutils, gcc-bootstrap ]
 
@@ -101,7 +101,7 @@ jobs:
 
   gcc-newlib:
     name: GNU Compiler Collection with newlib
-    runs-on: unbuntu-latest
+    runs-on: ubuntu-latest
 
     needs: [ binutils, gcc-bootstrap, newlib ]
 
