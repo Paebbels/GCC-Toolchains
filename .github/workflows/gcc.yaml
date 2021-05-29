@@ -52,6 +52,8 @@ jobs:
       - name: Configure binutils ${{ env.BINUTILS_VERSION }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
+          pwd
+          readlink -f .
           ../../${BINUTILS_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX} --enable-plugins
 
       - name: Build binutils ${{ env.BINUTILS_VERSION }}
