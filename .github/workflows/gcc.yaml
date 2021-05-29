@@ -20,13 +20,13 @@ jobs:
       PREFIX:              /opt/cross
 
       BINUTILS_SOURCE_DIR: binutils-${{ matrix.binutils }}
-      BINUTILS_BUILD_DIR:  ${{ env.BUILD_DIR }}/binutils
+      BINUTILS_BUILD_DIR:  build/binutils
       
       GCC_SOURCE_DIR:      gcc-${{ matrix.gcc }}
-      GCC_BUILD_DIR:       ${{ env.BUILD_DIR }}/gcc
+      GCC_BUILD_DIR:       "${{ env.BUILD_DIR }}/gcc"
       
       NEWLIB_SOURCE_DIR:   newlib-${{ matrix.newlib }}
-      NEWLIB_BUILD_DIR:    ${BUILD_DIR}/newlib
+      NEWLIB_BUILD_DIR:    "${BUILD_DIR}/newlib"
 
     steps:
       - name: Download binutils ${{ matrix.binutils }}
