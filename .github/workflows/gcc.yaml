@@ -49,6 +49,7 @@ jobs:
 
       - name: Make directory structure
         run: |
+          mkdir -p ${PREFIX}
           mkdir -p ${BINUTILS_BUILD_DIR}
           mkdir -p ${GCC_BUILD_DIR}
           mkdir -p ${NEWLIB_BUILD_DIR}
