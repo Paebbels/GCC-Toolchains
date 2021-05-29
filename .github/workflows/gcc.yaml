@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Install build dependencies
         run: |
-          sudo apt-get install gmp mpfr mpc
+          sudo apt-get install libgmp10 libmpfr6 libmpc3
     
       - name: Download binutils ${{ matrix.binutils }}
         run: curl https://mirrors.syringanetworks.net/gnu/binutils/binutils-${{ matrix.binutils }}.tar.gz --output binutils-${{ matrix.binutils }}.tar.gz
