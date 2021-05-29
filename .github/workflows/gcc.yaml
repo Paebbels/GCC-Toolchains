@@ -31,30 +31,27 @@ jobs:
     steps:
       - name: Download binutils ${{ matrix.binutils }}
         run: curl https://mirrors.syringanetworks.net/gnu/binutils/binutils-${{ matrix.binutils }}.tar.gz --output binutils-${{ matrix.binutils }}.tar.gz
-#      - name: Download GCC ${{ env.GCC_VERSION }}
-#        run: curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${{ matrix.gcc }}/gcc-${{ matrix.gcc }}.tar.gz --output gcc-${{ matrix.gcc }}.tar.gz
-#      - name: Download newlib ${{ env.NEWLIB_VERSION }}
-#        run: curl ftp://sourceware.org/pub/newlib/newlib-${{ matrix.newlib }}.tar.gz --output newlib-${{ matrix.newlib }}.tar.gz
+      - name: Download GCC ${{ env.GCC_VERSION }}
+        run: curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${{ matrix.gcc }}/gcc-${{ matrix.gcc }}.tar.gz --output gcc-${{ matrix.gcc }}.tar.gz
+      - name: Download newlib ${{ env.NEWLIB_VERSION }}
+        run: curl ftp://sourceware.org/pub/newlib/newlib-${{ matrix.newlib }}.tar.gz --output newlib-${{ matrix.newlib }}.tar.gz
 
       - name: Extract files
         run: |
           tar -xzf binutils-${{ matrix.binutils }}.tar.gz
+          tar -xzf gcc-${{ matrix.gcc }}.tar.gz
+          tar -xzf newlib-${{ matrix.newlib }}.tar.gz
           ls -lAh
-#          tar -xzf gcc-${{ matrix.gcc }}.tar.gz
-#          tar -xzf newlib-${{ matrix.newlib }}.tar.gz
 
       - name: Make directory structure
         run: |
           mkdir -p ${BINUTILS_BUILD_DIR}
           mkdir -p ${GCC_BUILD_DIR}
           mkdir -p ${NEWLIB_BUILD_DIR}
-          ls -lAh build
 
       - name: Configure binutils ${{ env.BINUTILS_VERSION }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
-          pwd
-          readlink -f .
           ../../${BINUTILS_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX} --enable-plugins
 
       - name: Build binutils ${{ env.BINUTILS_VERSION }}
@@ -70,7 +67,6 @@ jobs:
       - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
           cd ${GCC_BUILD_DIR}
-          ls -lAh ../../binutils-${{ matrix.gcc }}
           ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX} --enable-languages=c,c++ --without-headers --with-newlib --with-gnu-as --with-gnu-ld
 
       - name: Build GCC ${{ env.GCC_VERSION }}
@@ -86,7 +82,6 @@ jobs:
       - name: Configure newlib ${{ env.NEWLIB_VERSION }}
         run: |
           cd ${GCC_BUILD_DIR}
-          ls -lAh ../../binutils-${{ matrix.newlib }}
           ../../${NEWLIB_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX}
 
       - name: Build newlib ${{ env.NEWLIB_VERSION }}
@@ -102,7 +97,6 @@ jobs:
       - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
           cd ${GCC_BUILD_DIR}
-          ls -lAh ../../gcc-${{ matrix.gcc }}
           ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=$PREFIX --with-newlib --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
       - name: Build GCC ${{ env.GCC_VERSION }}
