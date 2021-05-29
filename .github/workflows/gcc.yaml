@@ -46,11 +46,11 @@ jobs:
           mkdir -p ${BUILD_DIR}/${BINUTILS_DIR}
           mkdir -p ${BUILD_DIR}/${GCC_DIR}
           mkdir -p ${BUILD_DIR}/${NEWLIB_DIR}
-          cd ${BUILD_DIR} && ls -lAh && cd -
 
       - name: Configure binutils ${{ env.BINUTILS_VERSION }}
         run: |
           cd ${BUILD_DIR}/${BINUTILS_DIR}
+          ls -lAh ../binutils-${BINUTILS_VERSION}
           ../binutils-${BINUTILS_VERSION}/configure --target=${TARGET} --prefix=${PREFIX}
 
       - name: Build binutils ${{ env.BINUTILS_VERSION }}
@@ -62,6 +62,7 @@ jobs:
       - name: Configure GCC ${{ env.GCC_VERSION }}
         run: |
           cd ${BUILD_DIR}/${GCC_DIR}
+          ls -lAh ../binutils-${GCC_VERSION}
           ../gcc-${GCC_VERSION}/configure --target=${TARGET} --prefix=${PREFIX} --without-headers --with-newlib --with-gnu-as --with-gnu-ld
 
       - name: Build GCC ${{ env.GCC_VERSION }}
@@ -73,6 +74,7 @@ jobs:
       - name: Configure newlib ${{ env.NEWLIB_VERSION }}
         run: |
           cd ${BUILD_DIR}/${GCC_DIR}
+          ls -lAh ../binutils-${NEWLIB_VERSION}
           ../newlib-${NEWLIB_VERSION}/configure --target=${TARGET} --prefix=${PREFIX}
 
       - name: Build newlib ${{ env.NEWLIB_VERSION }}
