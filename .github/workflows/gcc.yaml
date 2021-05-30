@@ -18,6 +18,7 @@ jobs:
     env:
       TARGET:              ${{ matrix.arch }}-none-elf
       PREFIX:              /opt/cross
+      PATH:                $PATH:$PREFIX/bin
 
       BINUTILS_SOURCE_DIR: binutils-${{ matrix.binutils }}
       BINUTILS_BUILD_DIR:  build/binutils
