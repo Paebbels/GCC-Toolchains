@@ -2,9 +2,6 @@ name: GCC Toolchain for AArch64 with NewLib
 
 on: [ push ]
 
-#env:
-#  BUILD_DIR: build
-
 jobs:
   binutils:
     name: binutils ${{ matrix.binutils }}
@@ -34,8 +31,7 @@ jobs:
         id:   cache-downloads
         uses: actions/cache@v2
         with:
-          path: |
-            binutils-${{ matrix.binutils }}/
+          path: binutils-${{ matrix.binutils }}/
           key: binutils-${{ matrix.binutils }}
 
       - name: Download binutils ${{ matrix.binutils }} and extract (in uncached)
@@ -73,7 +69,8 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: binutils-${{ matrix.binutils }}
-          path: ${PREFIX}
+          path: ${{ env.PREFIX }}
+          if-no-files-found: error
           retention-days: 1
 
   gcc-bootstrap:
@@ -107,14 +104,13 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: binutils-${{ matrix.binutils }}
-          path: ${PREFIX}
+          path: ${{ env.PREFIX }}
 
       - name: Restore gcc download cache (extracted downloads file)
         id:   cache-downloads
         uses: actions/cache@v2
         with:
-          path: |
-            gcc-${{ matrix.gcc }}/
+          path: gcc-${{ matrix.gcc }}/
           key: gcc-${{ matrix.gcc }}
 
       - name: Download gcc ${{ matrix.gcc }} and extract (in uncached)
@@ -157,13 +153,15 @@ jobs:
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-objects
           path: ${GCC_BUILD_DIR}
+          if-no-files-found: error
           retention-days: 1
 
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }}' artifacts
         uses: actions/upload-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}
-          path: ${PREFIX}
+          path: ${{ env.PREFIX }}
+          if-no-files-found: error
           retention-days: 1
 
   newlib:
@@ -199,14 +197,13 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}
-          path: ${PREFIX}
+          path: ${{ env.PREFIX }}
 
       - name: Restore newlib cache (extracted downloads file)
         id:   cache-downloads
         uses: actions/cache@v2
         with:
-          path: |
-            newlib-${{ matrix.newlib }}/
+          path: newlib-${{ matrix.newlib }}/
           key: newlib-${{ matrix.newlib }}
 
       - name: Download newlib ${{ matrix.newlib }} and extract (in uncached)
@@ -244,7 +241,8 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}
-          path: ${PREFIX}
+          path: ${{ env.PREFIX }}
+          if-no-files-found: error
           retention-days: 1
 
   gcc:
@@ -286,14 +284,13 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}
-          path: ${PREFIX}
+          path: ${{ env.PREFIX }}
 
       - name: Restore gcc download cache (extracted downloads file)
         id:   cache-downloads
         uses: actions/cache@v2
         with:
-          path: |
-            gcc-${{ matrix.gcc }}/
+          path: gcc-${{ matrix.gcc }}/
           key: gcc-${{ matrix.gcc }}
 
       - name: Download gcc ${{ matrix.gcc }} and extract (in uncached)
@@ -307,8 +304,7 @@ jobs:
         id:   cache-objects
         uses: actions/cache@v2
         with:
-          path: |
-            ${GCC_BUILD_DIR}/
+          path: ${GCC_BUILD_DIR}/
           key: gcc-${{ matrix.gcc }}-objects
 
       - name: Download gcc ${{ matrix.gcc }} and extract (in uncached)
@@ -337,11 +333,12 @@ jobs:
       - name: Install GCC ${{ matrix.gcc }}
         run: |
           cd ${GCC_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin make install
+          PATH=$PATH:$PREFIX/bin make install-strip
 
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' artifacts
         uses: actions/upload-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-aarch64
-          path: ${PREFIX}
+          path: ${{ env.PREFIX }}
+          if-no-files-found: error
           retention-days: 5
