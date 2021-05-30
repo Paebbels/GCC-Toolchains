@@ -19,7 +19,7 @@ jobs:
 
       - name: Testing binutils
         run: |
-          cat /opt/cross/binutils/artifact.txt
+          cat /opt/cross/artifact.txt
 
       - name: Upload binutil artifacts
         uses: actions/upload-artifact@v2
@@ -57,7 +57,7 @@ jobs:
 
       - name: Testing binutils
         run: |
-          cat /opt/cross/binutils/artifact.txt
+          cat /opt/cross/artifact.txt
 
       - name: Upload gcc artifacts
         uses: actions/upload-artifact@v2
@@ -96,7 +96,7 @@ jobs:
 
       - name: Testing binutils
         run: |
-          cat /opt/cross/binutils/artifact.txt
+          cat /opt/cross/artifact.txt
 
       - name: Upload gcc with newlib artifacts
         uses: actions/upload-artifact@v2
