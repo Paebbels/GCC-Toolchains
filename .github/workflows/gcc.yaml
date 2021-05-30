@@ -23,8 +23,14 @@ jobs:
       BINUTILS_SOURCE_DIR: binutils-${{ matrix.binutils }}
       BINUTILS_BUILD_DIR:  build/binutils
 
+    outputs:
+      arch:     ${{ matrix.arch }}
+      target:   ${{ env.TARGET }}
+      prefix:   ${{ env.PREFIX }}
+      binutils: ${{ matrix.binutils }}
+
     steps:
-      - name: Restore binutils cache (extracted downloads file)
+      - name: Restore binutils download cache (extracted downloads file)
         id:   cache-downloads
         uses: actions/cache@v2
         with:
@@ -67,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: binutils-${{ matrix.binutils }}
-          path: /opt/cross
+          path: ${PREFIX}
           retention-days: 1
 
   gcc-bootstrap:
@@ -84,27 +90,26 @@ jobs:
 
     env:
       TARGET:              ${{ matrix.arch }}-none-elf
-      PREFIX:              /opt/cross
+      PREFIX:              ${{ needs.binutils.outputs.prefix }}
 
       GCC_SOURCE_DIR:      gcc-${{ matrix.gcc }}
       GCC_BUILD_DIR:       build/gcc
+
+    outputs:
+      arch:     ${{ matrix.arch }}
+      target:   ${{ env.TARGET }}
+      prefix:   ${{ env.PREFIX }}
+      binutils: ${{ matrix.binutils }}
+      gcc:      ${{ matrix.gcc }}
 
     steps:
       - name: Download artifacts from 'binutils' job
         uses: actions/download-artifact@v2
         with:
           name: binutils-${{ matrix.binutils }}
-          path: /opt/cross
+          path: ${PREFIX}
 
-      - name: Restore gcc cache (extracted downloads file)
-        id:   cache-downloads
-        uses: actions/cache@v2
-        with:
-          path: |
-            ${GCC_BUILD_DIR}/
-          key: gcc-${{ matrix.gcc }}-objects
-
-      - name: Restore gcc build cache
+      - name: Restore gcc download cache (extracted downloads file)
         id:   cache-downloads
         uses: actions/cache@v2
         with:
@@ -147,11 +152,18 @@ jobs:
           cd ${GCC_BUILD_DIR}
           PATH=$PATH:$PREFIX/bin make install-gcc
 
+      - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' objects
+        uses: actions/upload-artifact@v2
+        with:
+          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-objects
+          path: ${GCC_BUILD_DIR}
+          retention-days: 1
+
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }}' artifacts
         uses: actions/upload-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}
-          path: /opt/cross
+          path: ${PREFIX}
           retention-days: 1
 
   newlib:
@@ -169,17 +181,25 @@ jobs:
 
     env:
       TARGET:              ${{ matrix.arch }}-none-elf
-      PREFIX:              /opt/cross
+      PREFIX:              ${{ needs.gcc-bootstrap.outputs.prefix }}
 
       NEWLIB_SOURCE_DIR:   newlib-${{ matrix.newlib }}
       NEWLIB_BUILD_DIR:    build/newlib
+
+    outputs:
+      arch:     ${{ matrix.arch }}
+      target:   ${{ env.TARGET }}
+      prefix:   ${{ env.PREFIX }}
+      binutils: ${{ matrix.binutils }}
+      gcc:      ${{ matrix.gcc }}
+      newlib:   ${{ matrix.newlib }}
 
     steps:
       - name: Download artifacts from 'gcc (bootstrap)' job
         uses: actions/download-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}
-          path: /opt/cross
+          path: ${PREFIX}
 
       - name: Restore newlib cache (extracted downloads file)
         id:   cache-downloads
@@ -224,14 +244,14 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}
-          path: /opt/cross
+          path: ${PREFIX}
           retention-days: 1
 
   gcc:
     name: gcc ${{ matrix.gcc }}
     runs-on: ubuntu-latest
 
-    needs: [ newlib ]
+    needs: [ gcc-bootstrap, newlib ]
 
     strategy:
       matrix:
@@ -242,25 +262,46 @@ jobs:
 
     env:
       TARGET:              ${{ matrix.arch }}-none-elf
-      PREFIX:              /opt/cross
+      PREFIX:              ${{ needs.newlib.outputs.prefix }}
 
       GCC_SOURCE_DIR:      gcc-${{ matrix.gcc }}
       GCC_BUILD_DIR:       build/gcc
 
+    outputs:
+      arch:     ${{ matrix.arch }}
+      target:   ${{ env.TARGET }}
+      prefix:   ${{ env.PREFIX }}
+      binutils: ${{ matrix.binutils }}
+      gcc:      ${{ matrix.gcc }}
+      newlib:   ${{ matrix.newlib }}
+
     steps:
+      - name: Download objects from 'gcc-bootstrap' job
+        uses: actions/download-artifact@v2
+        with:
+          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-objects
+          path: ${GCC_BUILD_DIR}
+
       - name: Download artifacts from 'newlib' job
         uses: actions/download-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}
-          path: /opt/cross
+          path: ${PREFIX}
 
-      - name: Restore gcc cache (extracted downloads file)
+      - name: Restore gcc download cache (extracted downloads file)
         id:   cache-downloads
         uses: actions/cache@v2
         with:
           path: |
             gcc-${{ matrix.gcc }}/
           key: gcc-${{ matrix.gcc }}
+
+      - name: Download gcc ${{ matrix.gcc }} and extract (in uncached)
+        if:  steps.cache-downloads.outputs.cache-hit != 'true'
+        run: |
+          curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${{ matrix.gcc }}/gcc-${{ matrix.gcc }}.tar.gz --output gcc-${{ matrix.gcc }}.tar.gz
+          tar -xzf gcc-${{ matrix.gcc }}.tar.gz
+          ls -lAh
 
       - name: Restore gcc build cache
         id:   cache-downloads
@@ -301,6 +342,6 @@ jobs:
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-final
-          path: /opt/cross
+          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-aarch64
+          path: ${PREFIX}
           retention-days: 5
