@@ -2,8 +2,8 @@ name: GCC Toolchain for AArch64 with NewLib
 
 on: [ push ]
 
-env:
-  BUILD_DIR: build
+#env:
+#  BUILD_DIR: build
 
 jobs:
   toolchain:
@@ -54,78 +54,104 @@ jobs:
           mkdir -p ${GCC_BUILD_DIR}
           mkdir -p ${NEWLIB_BUILD_DIR}
       
-      - name: Setup environment
-        run: |
-          export PATH=$PATH:$PREFIX/bin 
-
       - name: List binutils ${{ matrix.binutils }} configuration options
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           ./${BINUTILS_SOURCE_DIR}/configure --help
           
       - name: List gcc ${{ matrix.gcc }} configuration options
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           ./${GCC_SOURCE_DIR}/configure --help
 
       - name: List newlib ${{ matrix.newlib }} configuration options
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           ./${NEWLIB_SOURCE_DIR}/configure --help
 
       - name: Configure binutils ${{ matrix.binutils }}
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${BINUTILS_BUILD_DIR}
           ../../${BINUTILS_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-plugins
 
       - name: Build binutils ${{ matrix.binutils }}
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${BINUTILS_BUILD_DIR}
           make --jobs 2
 
       - name: Install binutils ${{ matrix.binutils }}
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${BINUTILS_BUILD_DIR}
           make install
 
       - name: Configure GCC ${{ matrix.gcc }} (bootstrap)
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${GCC_BUILD_DIR}
           ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c --without-headers --disable-shared --with-newlib --with-gnu-as --with-gnu-ld
 
       - name: Build GCC ${{ matrix.gcc }} (bootstrap)
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${GCC_BUILD_DIR}
           make --jobs 2 all-gcc
 
       - name: Install GCC ${{ matrix.gcc }} (bootstrap)
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${GCC_BUILD_DIR}
           make install-gcc
 
       - name: Configure newlib ${{ matrix.newlib }}
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${NEWLIB_BUILD_DIR}
           ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX}
 
       - name: Build newlib ${{ matrix.newlib }}
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${NEWLIB_BUILD_DIR}
           make --jobs 2
 
       - name: Install newlib ${{ matrix.newlib }}
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${NEWLIB_BUILD_DIR}
           make install
 
       - name: Configure GCC ${{ matrix.gcc }}
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${GCC_BUILD_DIR}
           ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c,c++ --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
       - name: Build GCC ${{ matrix.gcc }}
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${GCC_BUILD_DIR}
           make --jobs 2
 
       - name: Install GCC ${{ matrix.gcc }}
+        env:
+          PATH: $PATH:$PREFIX/bin
         run: |
           cd ${GCC_BUILD_DIR}
           make install
