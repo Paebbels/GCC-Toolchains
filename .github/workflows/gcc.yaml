@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - {arch: aarach64, binutils: 2.63.0 }
+          - {arch: aarach64, binutils: 2.63 }
           - {arch: aarach64, binutils: 2.63.1 }
 
     env:
@@ -41,7 +41,7 @@ jobs:
       - name: Download binutils ${{ matrix.binutils }} and extract (in uncached)
         if:  steps.cache-downloads.outputs.cache-hit != 'true'
         run: |
-          curl https://mirrors.syringanetworks.net/gnu/binutils/binutils-${{ matrix.binutils }}.tar.gz --output binutils-${{ matrix.binutils }}.tar.gz
+          curl https://ftp.gnu.org/gnu/binutils/binutils-${{ matrix.binutils }}.tar.gz --output binutils-${{ matrix.binutils }}.tar.gz
           tar -xzf binutils-${{ matrix.binutils }}.tar.gz
           ls -lAh
 
