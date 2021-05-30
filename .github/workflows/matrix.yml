@@ -47,6 +47,8 @@ jobs:
 
       - name: Checking binutils
         run: |
+          ls -lAh /opt
+          ls -lAh /opt/cross
           cat /opt/cross/artifact.txt
 
       - name: gcc ${{ matrix.gcc }}
