@@ -8,15 +8,20 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        binutils: [ bin_1, bin_2 ]
+        binutils: [ 1.1, 2.1 ]
     
     steps:
       - name: binutils ${{ matrix.binutils }}
         run: |
           mkdir -p /opt/cross/binutils
           echo "binutils ${{ matrix.binutils }}" > /opt/cross/binutils/binutils.txt
-          cat /opt/cross/**/*.txt > artifact.txt
-      - name: Upload artifacts
+          cat /opt/cross/**/*.txt > /opt/cross/artifact.txt
+
+      - name: Testing binutils
+        run: |
+          cat /opt/cross/binutils/artifact.txt
+
+      - name: Upload binutil artifacts
         uses: actions/upload-artifact@v2
         with:
           name: binutils-${{ matrix.binutils }}
@@ -25,12 +30,12 @@ jobs:
           retention-days: 1
 
   gcc-bootstrap:
-    name:    gcc ${{ matrix.gcc }}
+    name:    binutils ${{ matrix.binutils }} => gcc ${{ matrix.gcc }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        binutils: [ bin_1, bin_2  ]
-        gcc:      [ gcc_9, gcc_10 ]
+        binutils: [ 1.1, 2.1  ]
+        gcc:      [ 9.0, 10.0 ]
     
     needs: [ binutils ]
     
@@ -40,17 +45,21 @@ jobs:
         with:
           name: binutils-${{ matrix.binutils }}
 
-      - name: check binutils
+      - name: Checking binutils
         run: |
-          cat /opt/cross/binutils/artifact.txt
+          cat /opt/cross/artifact.txt
 
       - name: gcc ${{ matrix.gcc }}
         run: |
           mkdir -p /opt/cross/gcc
           echo "gcc ${{ matrix.gcc }}" > /opt/cross/gcc/gcc.txt
-          cat /opt/cross/**/*.txt > artifact.txt
+          cat /opt/cross/**/*.txt > /opt/cross/artifact.txt
 
-      - name: Upload artifacts
+      - name: Testing binutils
+        run: |
+          cat /opt/cross/binutils/artifact.txt
+
+      - name: Upload gcc artifacts
         uses: actions/upload-artifact@v2
         with:
           name: binutils-${{ matrix.binutils }}-gcc-${{ matrix.gcc }}
@@ -59,13 +68,13 @@ jobs:
           retention-days: 1
 
   newlib:
-    name:    newlib ${{ matrix.newlib }}
+    name:    binutils ${{ matrix.binutils }} => gcc ${{ matrix.gcc }} with newlib ${{ matrix.newlib }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        binutils: [ bin_1, bin_2  ]
-        gcc:      [ gcc_9, gcc_10 ]
-        newlib:   [ lib20, lib21 ]
+        binutils: [ 1.1, 2.1  ]
+        gcc:      [ 9.0, 10.0 ]
+        newlib:   [ 4.0.1, 4.1.0 ]
     
     needs: [ gcc-bootstrap ]
     
@@ -75,17 +84,21 @@ jobs:
         with:
           name: binutils-${{ matrix.binutils }}
 
-      - name: check binutils
+      - name: Check binutils and gcc
         run: |
-          cat /opt/cross/binutils/artifact.txt
+          cat /opt/cross/artifact.txt
 
       - name: newlib ${{ matrix.newlib }}
         run: |
           mkdir -p /opt/cross/newlib
           echo "newlib ${{ matrix.newlib }}" > /opt/cross/newlib/newlib.txt
-          cat /opt/cross/**/*.txt > artifact.txt
+          cat /opt/cross/**/*.txt > /opt/cross/artifact.txt
 
-      - name: Upload artifacts
+      - name: Testing binutils
+        run: |
+          cat /opt/cross/binutils/artifact.txt
+
+      - name: Upload gcc with newlib artifacts
         uses: actions/upload-artifact@v2
         with:
           name: binutils-${{ matrix.binutils }}-gcc-${{ matrix.gcc }}-newlib-${{ matrix.newlib }}
@@ -93,11 +106,6 @@ jobs:
             /opt/cross
           retention-days: 1
 
-#  newlib:
-#    strategy:
-#      matrix:
-#        version: [ lib_20, lib_21 ]
-  
 #  gcc:
 #    strategy:
 #      matrix:
