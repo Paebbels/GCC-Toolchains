@@ -10,6 +10,9 @@ jobs:
       matrix:
         binutils: [ 1.1, 2.1 ]
     
+    env:
+      PREFIX: /opt/cross
+    
     steps:
       - name: binutils ${{ matrix.binutils }}
         run: |
@@ -17,9 +20,14 @@ jobs:
           echo "binutils ${{ matrix.binutils }}" > /opt/cross/binutils/binutils.txt
           cat /opt/cross/**/*.txt > /opt/cross/artifact.txt
 
+      - name: Setup environment
+        run: |
+          export PATH=$PATH:$PREFIX/bin 
+
       - name: Testing binutils
         run: |
           cat /opt/cross/artifact.txt
+          env
 
       - name: Upload binutil artifacts
         uses: actions/upload-artifact@v2
