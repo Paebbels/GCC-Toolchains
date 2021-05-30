@@ -54,62 +54,62 @@ jobs:
           mkdir -p ${GCC_BUILD_DIR}
           mkdir -p ${NEWLIB_BUILD_DIR}
 
-      - name: Configure binutils ${{ env.BINUTILS_VERSION }}
+      - name: Configure binutils ${{ matrix.binutils }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
-          ../../${BINUTILS_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX} --enable-plugins
+          ../../${BINUTILS_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-plugins
 
-      - name: Build binutils ${{ env.BINUTILS_VERSION }}
+      - name: Build binutils ${{ matrix.binutils }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
-          make
+          make -j2
 
-      - name: Install binutils ${{ env.BINUTILS_VERSION }}
+      - name: Install binutils ${{ matrix.binutils }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
           make install
 
-      - name: Configure GCC ${{ env.GCC_VERSION }}
+      - name: Configure GCC ${{ matrix.gcc }} (bootstrap)
         run: |
           cd ${GCC_BUILD_DIR}
-          ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX} --enable-languages=c --without-headers --disable-shared --with-newlib --with-gnu-as --with-gnu-ld
+          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c --without-headers --disable-shared --with-newlib --with-gnu-as --with-gnu-ld
 
-      - name: Build GCC ${{ env.GCC_VERSION }}
+      - name: Build GCC ${{ matrix.gcc }} (bootstrap)
         run: |
           cd ${GCC_BUILD_DIR}
-          make all-gcc
+          make -j2 all-gcc
 
-      - name: Install GCC ${{ env.GCC_VERSION }}
+      - name: Install GCC ${{ matrix.gcc }} (bootstrap)
         run: |
           cd ${GCC_BUILD_DIR}
           make install-gcc
 
-      - name: Configure newlib ${{ env.NEWLIB_VERSION }}
+      - name: Configure newlib ${{ matrix.newlib }}
         run: |
           cd ${GCC_BUILD_DIR}
-          ../../${NEWLIB_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=${PREFIX}
+          ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX}
 
-      - name: Build newlib ${{ env.NEWLIB_VERSION }}
+      - name: Build newlib ${{ matrix.newlib }}
         run: |
           cd ${NEWLIB_BUILD_DIR}
-          make all
+          make -j2 all
 
-      - name: Install newlib ${{ env.NEWLIB_VERSION }}
+      - name: Install newlib ${{ matrix.newlib }}
         run: |
           cd ${NEWLIB_BUILD_DIR}
           make install
 
-      - name: Configure GCC ${{ env.GCC_VERSION }}
+      - name: Configure GCC ${{ matrix.gcc }}
         run: |
           cd ${GCC_BUILD_DIR}
-          ../../${GCC_SOURCE_DIR}/configure --target=${{ env.target }} --prefix=$PREFIX --enable-languages=c,c++ --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
+          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c,c++ --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
-      - name: Build GCC ${{ env.GCC_VERSION }}
+      - name: Build GCC ${{ matrix.gcc }}
         run: |
           cd ${GCC_BUILD_DIR}
-          make all
+          make -j2 all
 
-      - name: Install GCC ${{ env.GCC_VERSION }}
+      - name: Install GCC ${{ matrix.gcc }}
         run: |
           cd ${GCC_BUILD_DIR}
           make install
