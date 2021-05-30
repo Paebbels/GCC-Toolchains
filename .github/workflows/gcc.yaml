@@ -276,11 +276,11 @@ jobs:
       newlib:   ${{ matrix.newlib }}
 
     steps:
-      - name: Download objects from 'gcc-bootstrap' job
-        uses: actions/download-artifact@v2
-        with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-objects
-          path: ${GCC_BUILD_DIR}
+#      - name: Download objects from 'gcc-bootstrap' job
+#        uses: actions/download-artifact@v2
+#        with:
+#          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-objects
+#          path: ${GCC_BUILD_DIR}
 
       - name: Download artifacts from 'newlib' job
         uses: actions/download-artifact@v2
@@ -304,7 +304,7 @@ jobs:
           ls -lAh
 
       - name: Restore gcc build cache
-        id:   cache-downloads
+        id:   cache-objects
         uses: actions/cache@v2
         with:
           path: |
@@ -312,7 +312,7 @@ jobs:
           key: gcc-${{ matrix.gcc }}-objects
 
       - name: Download gcc ${{ matrix.gcc }} and extract (in uncached)
-        if:  steps.cache-downloads.outputs.cache-hit != 'true'
+        if:  steps.cache-objects.outputs.cache-hit != 'true'
         run: false
 
       - name: Install build dependencies
