@@ -13,8 +13,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - {arch: aarach64, binutils: 2.63 }
-          - {arch: aarach64, binutils: 2.63.1 }
+          - {arch: aarach64, binutils: 2.36 }
+          - {arch: aarach64, binutils: 2.36.1 }
 
     env:
       TARGET:              ${{ matrix.arch }}-none-elf
@@ -85,8 +85,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - {arch: aarach64, binutils: 2.63.1, gcc: 10.3.0 }
-          - {arch: aarach64, binutils: 2.63.1, gcc: 11.1.0 }
+          - {arch: aarach64, binutils: 2.36.1, gcc: 10.3.0 }
+          - {arch: aarach64, binutils: 2.36.1, gcc: 11.1.0 }
 
     env:
       TARGET:              ${{ matrix.arch }}-none-elf
@@ -175,7 +175,7 @@ jobs:
     strategy:
       matrix:
         arch:     [ aarach64 ]
-        binutils: [ 2.63.0, 2.63.1 ]
+        binutils: [ 2.63.1 ]
         gcc:      [ 11.1.0, 10.3.0 ]
         newlib:   [  4.0.0,  4.1.0 ]
 
@@ -256,7 +256,7 @@ jobs:
     strategy:
       matrix:
         arch:     [ aarach64 ]
-        binutils: [ 2.63.0, 2.63.1 ]
+        binutils: [ 2.36.1 ]
         gcc:      [ 11.1.0, 10.3.0 ]
         newlib:   [  4.0.0,  4.1.0 ]
 
