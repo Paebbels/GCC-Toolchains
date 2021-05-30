@@ -74,6 +74,8 @@ jobs:
     name: gcc ${{ matrix.gcc }} (bootstrap)
     runs-on: ubuntu-latest
 
+    needs: [ binutils ]
+
     strategy:
       matrix:
         include:
@@ -156,6 +158,8 @@ jobs:
     name: newlib ${{ matrix.newlib }}
     runs-on: ubuntu-latest
 
+    needs: [ gcc-bootstrap ]
+
     strategy:
       matrix:
         arch:     [ aarach64 ]
@@ -226,6 +230,8 @@ jobs:
   gcc:
     name: gcc ${{ matrix.gcc }}
     runs-on: ubuntu-latest
+
+    needs: [ newlib ]
 
     strategy:
       matrix:
