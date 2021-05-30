@@ -54,6 +54,18 @@ jobs:
           mkdir -p ${GCC_BUILD_DIR}
           mkdir -p ${NEWLIB_BUILD_DIR}
 
+      - name: List binutils ${{ matrix.binutils }} configuration options
+        run: |
+          ./${BINUTILS_SOURCE_DIR}/configure --help
+          
+      - name: List gcc ${{ matrix.gcc }} configuration options
+        run: |
+          ./${GCC_SOURCE_DIR}/configure --help
+
+      - name: List newlib ${{ matrix.newlib }} configuration options
+        run: |
+          ./${NEWLIB_SOURCE_DIR}/configure --help
+
       - name: Configure binutils ${{ matrix.binutils }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
@@ -62,7 +74,7 @@ jobs:
       - name: Build binutils ${{ matrix.binutils }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
-          make -j2
+          make --jobs 2
 
       - name: Install binutils ${{ matrix.binutils }}
         run: |
@@ -77,7 +89,7 @@ jobs:
       - name: Build GCC ${{ matrix.gcc }} (bootstrap)
         run: |
           cd ${GCC_BUILD_DIR}
-          make -j2 all-gcc
+          make --jobs 2 all-gcc
 
       - name: Install GCC ${{ matrix.gcc }} (bootstrap)
         run: |
@@ -92,7 +104,7 @@ jobs:
       - name: Build newlib ${{ matrix.newlib }}
         run: |
           cd ${NEWLIB_BUILD_DIR}
-          make -j2 all
+          make --jobs 2
 
       - name: Install newlib ${{ matrix.newlib }}
         run: |
@@ -107,7 +119,7 @@ jobs:
       - name: Build GCC ${{ matrix.gcc }}
         run: |
           cd ${GCC_BUILD_DIR}
-          make -j2 all
+          make --jobs 2 all
 
       - name: Install GCC ${{ matrix.gcc }}
         run: |
