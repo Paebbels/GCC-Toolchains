@@ -16,7 +16,7 @@ jobs:
           - { arch: aarch64, binutils: 2.36.1, gcc: 11.1.0, newlib: 4.1.0 }
 
     env:
-      TARGET:              ${{ matrix.arch }}-none-eabi
+      TARGET:              ${{ matrix.arch }}-none-elf
       PREFIX:              /opt/cross
 
       BINUTILS_SOURCE_DIR: binutils-${{ matrix.binutils }}
