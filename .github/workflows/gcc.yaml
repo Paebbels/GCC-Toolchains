@@ -98,7 +98,7 @@ jobs:
 
       - name: Configure newlib ${{ matrix.newlib }}
         run: |
-          cd ${GCC_BUILD_DIR}
+          cd ${NEWLIB_BUILD_DIR}
           ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX}
 
       - name: Build newlib ${{ matrix.newlib }}
