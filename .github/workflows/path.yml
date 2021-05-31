@@ -1,6 +1,9 @@
+on: [ push ]
 
 jobs:
   test:
+    runs-on: ubuntu-latest
+
     env:
       PREFIX:              /opt/cross
 
