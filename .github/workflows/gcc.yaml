@@ -52,22 +52,22 @@ jobs:
 
       - name: List binutils ${{ matrix.binutils }} configuration options
         run: |
-          PATH=$PATH:$PREFIX/bin ./${BINUTILS_SOURCE_DIR}/configure --help
+          ./${BINUTILS_SOURCE_DIR}/configure --help
 
       - name: Configure binutils ${{ matrix.binutils }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin ../../${BINUTILS_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-plugins
+          ../../${BINUTILS_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-plugins
 
       - name: Build binutils ${{ matrix.binutils }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin make --jobs 2
+          make --jobs 2
 
       - name: Install binutils ${{ matrix.binutils }}
         run: |
           cd ${BINUTILS_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin make install
+          make install
 
       - name: Upload 'binutils ${{ matrix.binutils }}' artifacts
         uses: actions/upload-artifact@v2
@@ -105,6 +105,9 @@ jobs:
       gcc:      ${{ matrix.gcc }}
 
     steps:
+      - name: App '${{ env.PREFIX }}/bin' to PATH
+        run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
+
       - name: Download artifacts from 'binutils' job
         uses: actions/download-artifact@v2
         with:
@@ -136,22 +139,22 @@ jobs:
 
       - name: List gcc ${{ matrix.gcc }} configuration options
         run: |
-          PATH=$PATH:$PREFIX/bin ./${GCC_SOURCE_DIR}/configure --help
+          ./${GCC_SOURCE_DIR}/configure --help
 
       - name: Configure GCC ${{ matrix.gcc }} (bootstrap)
         run: |
           cd ${GCC_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c --without-headers --disable-shared --with-newlib --with-gnu-as --with-gnu-ld
+          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c --without-headers --disable-shared --with-newlib --with-gnu-as --with-gnu-ld
 
       - name: Build GCC ${{ matrix.gcc }} (bootstrap)
         run: |
           cd ${GCC_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin make --jobs 2 all-gcc
+          make --jobs 2 all-gcc
 
       - name: Install GCC ${{ matrix.gcc }} (bootstrap)
         run: |
           cd ${GCC_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin make install-gcc
+          make install-gcc
 
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' objects
         uses: actions/upload-artifact@v2
@@ -199,6 +202,9 @@ jobs:
       newlib:   ${{ matrix.newlib }}
 
     steps:
+      - name: App '${{ env.PREFIX }}/bin' to PATH
+        run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
+
       - name: Download artifacts from 'gcc (bootstrap)' job
         uses: actions/download-artifact@v2
         with:
@@ -226,22 +232,22 @@ jobs:
 
       - name: List newlib ${{ matrix.newlib }} configuration options
         run: |
-          PATH=$PATH:$PREFIX/bin ./${NEWLIB_SOURCE_DIR}/configure --help
+          ./${NEWLIB_SOURCE_DIR}/configure --help
 
       - name: Configure newlib ${{ matrix.newlib }}
         run: |
           cd ${NEWLIB_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX}
+          ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX}
 
       - name: Build newlib ${{ matrix.newlib }}
         run: |
           cd ${NEWLIB_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin make --jobs 2
+          make --jobs 2
 
       - name: Install newlib ${{ matrix.newlib }}
         run: |
           cd ${NEWLIB_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin make install
+          make install
 
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' artifacts
         uses: actions/upload-artifact@v2
@@ -281,6 +287,9 @@ jobs:
       newlib:   ${{ matrix.newlib }}
 
     steps:
+      - name: App '${{ env.PREFIX }}/bin' to PATH
+        run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
+
 #      - name: Download objects from 'gcc-bootstrap' job
 #        uses: actions/download-artifact@v2
 #        with:
@@ -330,17 +339,17 @@ jobs:
       - name: Configure GCC ${{ matrix.gcc }}
         run: |
           cd ${GCC_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c,c++ --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
+          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c,c++ --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
       - name: Build GCC ${{ matrix.gcc }}
         run: |
           cd ${GCC_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin make --jobs 2
+          make --jobs 2
 
       - name: Install GCC ${{ matrix.gcc }}
         run: |
           cd ${GCC_BUILD_DIR}
-          PATH=$PATH:$PREFIX/bin make install-strip
+          make install-strip
 
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' artifacts
         uses: actions/upload-artifact@v2
