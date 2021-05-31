@@ -2,6 +2,9 @@ name: GCC Toolchain for AArch64 with NewLib
 
 on: [ push ]
 
+env:
+  foo: bar
+
 jobs:
   binutils:
     name: binutils ${{ matrix.binutils }}
@@ -27,6 +30,9 @@ jobs:
       binutils: ${{ matrix.binutils }}
 
     steps:
+      - name: App '${{ env.PREFIX }}/bin' to PATH
+        run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
+
       - name: Restore binutils download cache (extracted downloads file)
         id:   cache-downloads
         uses: actions/cache@v2
@@ -152,7 +158,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-objects
-          path: ${GCC_BUILD_DIR}
+          path: ${{ env.GCC_BUILD_DIR }}
           if-no-files-found: error
           retention-days: 1
 
@@ -304,7 +310,7 @@ jobs:
         id:   cache-objects
         uses: actions/cache@v2
         with:
-          path: ${GCC_BUILD_DIR}/
+          path: ${{ env.GCC_BUILD_DIR }}/
           key: gcc-${{ matrix.gcc }}-objects
 
       - name: Download gcc ${{ matrix.gcc }} and extract (in uncached)
