@@ -2,15 +2,13 @@ name: GCC Toolchain for AArch64 with NewLib
 
 on: [ push ]
 
-env:
-  foo: bar
-
 jobs:
   binutils:
     name: binutils ${{ matrix.binutils }}
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - {arch: aarch64, binutils: 2.36 }
@@ -86,6 +84,7 @@ jobs:
     needs: [ binutils ]
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - {arch: aarch64, binutils: 2.36.1, gcc: 10.3.0 }
@@ -177,9 +176,10 @@ jobs:
     needs: [ gcc-bootstrap ]
 
     strategy:
+      fail-fast: false
       matrix:
         arch:     [ aarch64 ]
-        binutils: [ 2.63.1 ]
+        binutils: [ 2.36.1 ]
         gcc:      [ 11.1.0, 10.3.0 ]
         newlib:   [  4.0.0,  4.1.0 ]
 
@@ -258,6 +258,7 @@ jobs:
     needs: [ gcc-bootstrap, newlib ]
 
     strategy:
+      fail-fast: false
       matrix:
         arch:     [ aarch64 ]
         binutils: [ 2.36.1 ]
