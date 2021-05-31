@@ -49,6 +49,7 @@ jobs:
         run: |
           mkdir -p ${PREFIX}
           mkdir -p ${BINUTILS_BUILD_DIR}
+          echo $PATH
 
       - name: List binutils ${{ matrix.binutils }} configuration options
         run: |
@@ -132,6 +133,7 @@ jobs:
         run: |
           mkdir -p ${PREFIX}
           mkdir -p ${GCC_BUILD_DIR}
+          echo $PATH
 
       - name: Install build dependencies
         run: |
@@ -229,25 +231,26 @@ jobs:
         run: |
           mkdir -p ${PREFIX}
           mkdir -p ${NEWLIB_BUILD_DIR}
+          echo $PATH
 
       - name: List newlib ${{ matrix.newlib }} configuration options
         run: |
-          ./${NEWLIB_SOURCE_DIR}/configure --help
+          PATH=$PREFIX/bin:$PATH ./${NEWLIB_SOURCE_DIR}/configure --help
 
       - name: Configure newlib ${{ matrix.newlib }}
         run: |
           cd ${NEWLIB_BUILD_DIR}
-          ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX}
+          PATH=$PREFIX/bin:$PATH ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX}
 
       - name: Build newlib ${{ matrix.newlib }}
         run: |
           cd ${NEWLIB_BUILD_DIR}
-          make --jobs 2
+          PATH=$PREFIX/bin:$PATH make --jobs 2
 
       - name: Install newlib ${{ matrix.newlib }}
         run: |
           cd ${NEWLIB_BUILD_DIR}
-          make install
+          PATH=$PREFIX/bin:$PATH make install
 
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' artifacts
         uses: actions/upload-artifact@v2
@@ -335,6 +338,7 @@ jobs:
         run: |
           mkdir -p ${PREFIX}
           mkdir -p ${GCC_BUILD_DIR}
+          echo $PATH
 
       - name: Configure GCC ${{ matrix.gcc }}
         run: |
