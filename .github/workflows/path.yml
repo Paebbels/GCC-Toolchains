@@ -1,0 +1,17 @@
+
+jobs:
+  test:
+    env:
+      PREFIX:              /opt/cross
+
+    outputs:
+      prefix:   ${{ env.PREFIX }}
+
+    steps:
+      - name: App '${{ env.PREFIX }}/bin' to PATH
+        run:  |
+          echo "${PREFIX}/bin" >> $GITHUB_PATH
+          echo $PATH
+
+      - name: Show environment
+        run:  env
