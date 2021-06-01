@@ -233,6 +233,12 @@ jobs:
           mkdir -p ${NEWLIB_BUILD_DIR}
           echo $PATH
 
+      - name: Debug
+        run: |
+          cd /opt/cross
+          ls -lAh *
+          chmod u+x /opt/cross/bin/*
+
       - name: List newlib ${{ matrix.newlib }} configuration options
         run: |
           PATH=$PREFIX/bin:$PATH ./${NEWLIB_SOURCE_DIR}/configure --help
