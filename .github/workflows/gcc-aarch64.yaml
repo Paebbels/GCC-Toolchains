@@ -165,7 +165,7 @@ jobs:
           cd ${GCC_BUILD_DIR}
           make install-gcc
 
-      - name: Package data from '${{ env.PREFIX }' before artifact upload to preserve file modes (chmod)
+      - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
         run: |
           tar -czf gcc-${{ matrix.binutils }}-${{ matrix.gcc }}.tar.gz ${{ env.PREFIX }}
 
@@ -270,7 +270,7 @@ jobs:
           cd ${NEWLIB_BUILD_DIR}
           make install
 
-      - name: Package data before artifact upload to preserve file modes (chmod)
+      - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
         run: |
           tar -czf gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}.tar.gz ${{ env.PREFIX }}
 
@@ -383,7 +383,7 @@ jobs:
           cd ${GCC_BUILD_DIR}
           make install-strip
 
-      - name: Package data before artifact upload to preserve file modes (chmod)
+      - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
         run: |
           tar -czf gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-aarch64.tar.gz ${{ env.PREFIX }}
 
