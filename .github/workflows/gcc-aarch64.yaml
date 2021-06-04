@@ -178,18 +178,24 @@ jobs:
           cd ${{ env.PREFIX }}
           tar -czf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}.tar.gz .
 
+      - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }}' artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}
+          path: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Package data from '${{ env.GCC_BUILD_DIR }}' before artifact upload to preserve file modes (chmod)
         run: |
           cd ${{ env.GCC_BUILD_DIR }}
           tar -czf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects.tar.gz .
 
-      - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }}' artifacts
+      - name: Upload 'gcc ${{ matrix.gcc }} object files' artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}
-          path: |
-            gcc-${{ matrix.binutils }}-${{ matrix.gcc }}.tar.gz
-            gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects.tar.gz
+          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects
+          path: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects.tar.gz
           if-no-files-found: error
           retention-days: 1
 
@@ -339,15 +345,15 @@ jobs:
           mkdir -p ${{ env.GCC_BUILD_DIR }}
           echo $PATH
 
-      - name: Download objects from 'gcc-bootstrap' job
+      - name: Download object files from 'gcc-bootstrap' job
         uses: actions/download-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-objects
+          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects
 
-      - name: Unpack data from 'gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-objects.tar.gz'
+      - name: Unpack data from 'gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects.tar.gz'
         run: |
           cd ${{ env.GCC_BUILD_DIR }}
-          tar -xzf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-objects.tar.gz
+          tar -xzf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects.tar.gz
 
       - name: Download artifacts from 'newlib' job
         uses: actions/download-artifact@v2
