@@ -1,0 +1,424 @@
+name: GCC Toolchain for AArch64 with NewLib
+
+on: [ push ]
+
+jobs:
+  binutils:
+    name: binutils ${{ matrix.binutils }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: aarch64, binutils: 2.36 }
+          - {arch: aarch64, binutils: 2.36.1 }
+
+    env:
+      TARGET:              ${{ matrix.arch }}-none-elf
+      PREFIX:              /opt/xilinx/mpsoc/a53
+
+      BINUTILS_SOURCE_DIR: binutils-${{ matrix.binutils }}
+      BINUTILS_BUILD_DIR:  build/binutils
+
+    outputs:
+      arch:     ${{ matrix.arch }}
+      target:   ${{ env.TARGET }}
+      prefix:   ${{ env.PREFIX }}
+      binutils: ${{ matrix.binutils }}
+
+    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+
+      - name: Add workspace directory to environment, due to no Git checkout
+        run:  echo "GITHUB_WORKSPACE=$(pwd)" >> $GITHUB_ENV
+
+      - name: Add '${{ env.PREFIX }}/bin' to PATH
+        run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
+
+      - name: Make directory structure
+        run: |
+          mkdir -p ${PREFIX}
+          mkdir -p ${BINUTILS_BUILD_DIR}
+          echo $PATH
+
+      - name: Restore binutils download cache (extracted downloads file)
+        id:   cache-downloads
+        uses: actions/cache@v2
+        with:
+          path: binutils-${{ matrix.binutils }}/
+          key: binutils-${{ matrix.binutils }}
+
+      - name: Download binutils ${{ matrix.binutils }} and extract (in uncached)
+        if:  steps.cache-downloads.outputs.cache-hit != 'true'
+        run: |
+          curl https://ftp.gnu.org/gnu/binutils/binutils-${{ matrix.binutils }}.tar.gz --output binutils-${{ matrix.binutils }}.tar.gz
+          tar -xzf binutils-${{ matrix.binutils }}.tar.gz
+          ls -lAh
+
+      - name: List binutils ${{ matrix.binutils }} configuration options
+        run: |
+          ./${BINUTILS_SOURCE_DIR}/configure --help
+
+      - name: Configure binutils ${{ matrix.binutils }}
+        run: |
+          cd ${BINUTILS_BUILD_DIR}
+          ../../${BINUTILS_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-plugins
+
+      - name: Build binutils ${{ matrix.binutils }}
+        run: |
+          cd ${BINUTILS_BUILD_DIR}
+          make --jobs 2
+
+      - name: Install binutils ${{ matrix.binutils }}
+        run: |
+          cd ${BINUTILS_BUILD_DIR}
+          make install
+
+      - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
+        run: |
+          cd ${{ env.PREFIX }}
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/binutils-${{ matrix.binutils }}.tar.gz .
+
+      - name: Upload 'binutils ${{ matrix.binutils }}' artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: binutils-${{ matrix.binutils }}
+          path: binutils-${{ matrix.binutils }}.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+  gcc-bootstrap:
+    name: gcc ${{ matrix.gcc }} (bootstrap)
+    runs-on: ubuntu-latest
+
+    needs: [ binutils ]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arch: aarch64, binutils: 2.36.1, gcc: 10.3.0 }
+          - {arch: aarch64, binutils: 2.36.1, gcc: 11.1.0 }
+
+    env:
+      TARGET:              ${{ matrix.arch }}-none-elf
+      PREFIX:              ${{ needs.binutils.outputs.prefix }}
+
+      GCC_SOURCE_DIR:      gcc-${{ matrix.gcc }}
+      GCC_BUILD_DIR:       build/gcc
+
+    outputs:
+      arch:     ${{ matrix.arch }}
+      target:   ${{ env.TARGET }}
+      prefix:   ${{ env.PREFIX }}
+      binutils: ${{ matrix.binutils }}
+      gcc:      ${{ matrix.gcc }}
+
+    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+
+      - name: Add workspace directory to environment, due to no Git checkout
+        run:  echo "GITHUB_WORKSPACE=$(pwd)" >> $GITHUB_ENV
+
+      - name: Add '${{ env.PREFIX }}/bin' to PATH
+        run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
+
+      - name: Make directory structure
+        run: |
+          mkdir -p ${{ env.PREFIX }}
+          mkdir -p ${{ env.GCC_BUILD_DIR }}
+          echo $PATH
+
+      - name: Download artifacts from 'binutils' job
+        uses: actions/download-artifact@v2
+        with:
+          name: binutils-${{ matrix.binutils }}
+
+      - name: Unpack data from 'binutils-${{ matrix.binutils }}.tar.gz'
+        run: |
+          cd ${{ env.PREFIX }}
+          tar -xzf ${{ env.GITHUB_WORKSPACE }}/binutils-${{ matrix.binutils }}.tar.gz
+
+      - name: Restore gcc download cache (extracted downloads file)
+        id:   cache-downloads
+        uses: actions/cache@v2
+        with:
+          path: gcc-${{ matrix.gcc }}/
+          key: gcc-${{ matrix.gcc }}
+
+      - name: Download gcc ${{ matrix.gcc }} and extract (in uncached)
+        if:  steps.cache-downloads.outputs.cache-hit != 'true'
+        run: |
+          curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${{ matrix.gcc }}/gcc-${{ matrix.gcc }}.tar.gz --output gcc-${{ matrix.gcc }}.tar.gz
+          tar -xzf gcc-${{ matrix.gcc }}.tar.gz
+          ls -lAh
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get install libgmp-dev libmpfr-dev libmpc-dev libisl-dev
+
+      - name: List gcc ${{ matrix.gcc }} configuration options
+        run: |
+          ./${GCC_SOURCE_DIR}/configure --help
+
+      - name: Configure GCC ${{ matrix.gcc }} (bootstrap)
+        run: |
+          cd ${{ env.GCC_BUILD_DIR }}
+          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c --without-headers --disable-shared --with-newlib --with-gnu-as --with-gnu-ld
+
+      - name: Build GCC ${{ matrix.gcc }} (bootstrap)
+        run: |
+          cd ${{ env.GCC_BUILD_DIR }}
+          make --jobs 2 all-gcc
+
+      - name: Install GCC ${{ matrix.gcc }} (bootstrap)
+        run: |
+          cd ${{ env.GCC_BUILD_DIR }}
+          make install-gcc
+
+      - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
+        run: |
+          cd ${{ env.PREFIX }}
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz .
+
+      - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }}' artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}
+          path: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Package data from '${{ env.GCC_BUILD_DIR }}' before artifact upload to preserve file modes (chmod)
+        run: |
+          cd ${{ env.GCC_BUILD_DIR }}
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files.tar.gz .
+
+      - name: Upload 'gcc ${{ matrix.gcc }} object files' artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files
+          path: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+  newlib:
+    name: newlib ${{ matrix.newlib }}
+    runs-on: ubuntu-latest
+
+    needs: [ gcc-bootstrap ]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:     [ aarch64 ]
+        binutils: [ 2.36.1 ]
+        gcc:      [ 11.1.0, 10.3.0 ]
+        newlib:   [  4.0.0,  4.1.0 ]
+
+    env:
+      TARGET:              ${{ matrix.arch }}-none-elf
+      PREFIX:              ${{ needs.gcc-bootstrap.outputs.prefix }}
+
+      NEWLIB_SOURCE_DIR:   newlib-${{ matrix.newlib }}
+      NEWLIB_BUILD_DIR:    build/newlib
+
+    outputs:
+      arch:     ${{ matrix.arch }}
+      target:   ${{ env.TARGET }}
+      prefix:   ${{ env.PREFIX }}
+      binutils: ${{ matrix.binutils }}
+      gcc:      ${{ matrix.gcc }}
+      newlib:   ${{ matrix.newlib }}
+
+    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+
+      - name: Add workspace directory to environment, due to no Git checkout
+        run:  echo "GITHUB_WORKSPACE=$(pwd)" >> $GITHUB_ENV
+
+      - name: Add '${{ env.PREFIX }}/bin' to PATH
+        run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
+
+      - name: Make directory structure
+        run: |
+          mkdir -p ${{ env.PREFIX }}
+          mkdir -p ${{ env.NEWLIB_BUILD_DIR }}
+          echo $PATH
+
+      - name: Download artifacts from 'gcc (bootstrap)' job
+        uses: actions/download-artifact@v2
+        with:
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}
+
+      - name: Unpack data from 'gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz'
+        run: |
+          cd ${{ env.PREFIX }}
+          tar -xzf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz
+          ls -lAh
+
+      - name: Restore newlib cache (extracted downloads file)
+        id:   cache-downloads
+        uses: actions/cache@v2
+        with:
+          path: newlib-${{ matrix.newlib }}/
+          key: newlib-${{ matrix.newlib }}
+
+      - name: Download newlib ${{ matrix.newlib }} and extract (in uncached)
+        if:  steps.cache-downloads.outputs.cache-hit != 'true'
+        run: |
+          curl ftp://sourceware.org/pub/newlib/newlib-${{ matrix.newlib }}.tar.gz --output newlib-${{ matrix.newlib }}.tar.gz
+          tar -xzf newlib-${{ matrix.newlib }}.tar.gz
+          ls -lAh
+
+      - name: Debug
+        run: |
+          cd ${{ env.PREFIX }}
+          ls -lAh *
+
+      - name: List newlib ${{ matrix.newlib }} configuration options
+        run: |
+          ./${NEWLIB_SOURCE_DIR}/configure --help
+
+      - name: Configure newlib ${{ matrix.newlib }}
+        run: |
+          cd ${{ env.NEWLIB_BUILD_DIR }}
+          ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-multilib
+
+      - name: Build newlib ${{ matrix.newlib }}
+        run: |
+          cd ${{ env.NEWLIB_BUILD_DIR }}
+          make --jobs 2
+
+      - name: Install newlib ${{ matrix.newlib }}
+        run: |
+          cd ${{ env.NEWLIB_BUILD_DIR }}
+          make install
+
+      - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
+        run: |
+          cd ${{ env.PREFIX }}
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz .
+
+      - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}
+          path: newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+  gcc:
+    name: gcc ${{ matrix.gcc }}
+    runs-on: ubuntu-latest
+
+    needs: [ gcc-bootstrap, newlib ]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:     [ aarch64 ]
+        binutils: [ 2.36.1 ]
+        gcc:      [ 11.1.0, 10.3.0 ]
+        newlib:   [  4.0.0,  4.1.0 ]
+
+    env:
+      TARGET:              ${{ matrix.arch }}-none-elf
+      PREFIX:              ${{ needs.newlib.outputs.prefix }}
+
+      GCC_SOURCE_DIR:      gcc-${{ matrix.gcc }}
+      GCC_BUILD_DIR:       build/gcc
+
+    outputs:
+      arch:     ${{ matrix.arch }}
+      target:   ${{ env.TARGET }}
+      prefix:   ${{ env.PREFIX }}
+      binutils: ${{ matrix.binutils }}
+      gcc:      ${{ matrix.gcc }}
+      newlib:   ${{ matrix.newlib }}
+
+    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+
+      - name: Add workspace directory to environment, due to no Git checkout
+        run:  echo "GITHUB_WORKSPACE=$(pwd)" >> $GITHUB_ENV
+
+      - name: Add '${{ env.PREFIX }}/bin' to PATH
+        run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
+
+      - name: Make directory structure
+        run: |
+          mkdir -p ${{ env.PREFIX }}
+          mkdir -p ${{ env.GCC_BUILD_DIR }}
+          echo $PATH
+
+      - name: Download object files from 'gcc-bootstrap' job
+        uses: actions/download-artifact@v2
+        with:
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files
+
+      - name: Unpack data from 'gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files.tar.gz'
+        run: |
+          cd ${{ env.GCC_BUILD_DIR }}
+          tar -xzf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files.tar.gz
+
+      - name: Download artifacts from 'newlib' job
+        uses: actions/download-artifact@v2
+        with:
+          name: newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}
+
+      - name: Unpack data from 'newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz'
+        run: |
+          cd ${{ env.PREFIX }}
+          tar -xzf ${{ env.GITHUB_WORKSPACE }}/newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz
+
+      - name: Restore gcc download cache (extracted downloads file)
+        id:   cache-downloads
+        uses: actions/cache@v2
+        with:
+          path: gcc-${{ matrix.gcc }}/
+          key: gcc-${{ matrix.gcc }}
+
+      - name: Download gcc ${{ matrix.gcc }} and extract (in uncached)
+        if:  steps.cache-downloads.outputs.cache-hit != 'true'
+        run: |
+          curl https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-${{ matrix.gcc }}/gcc-${{ matrix.gcc }}.tar.gz --output gcc-${{ matrix.gcc }}.tar.gz
+          tar -xzf gcc-${{ matrix.gcc }}.tar.gz
+          ls -lAh
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get install libgmp-dev libmpfr-dev libmpc-dev libisl-dev
+
+      - name: Configure GCC ${{ matrix.gcc }}
+        run: |
+          cd ${{ env.GCC_BUILD_DIR }}
+          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
+
+      - name: Build GCC ${{ matrix.gcc }}
+        run: |
+          cd ${{ env.GCC_BUILD_DIR }}
+          make --jobs 2
+
+      - name: Install GCC ${{ matrix.gcc }}
+        run: |
+          cd ${{ env.GCC_BUILD_DIR }}
+          make install-strip
+
+      - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
+        run: |
+          cd ${{ env.PREFIX }}
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}_newlib-${{ matrix.newlib }}_aarch64.tar.gz .
+
+      - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}_newlib-${{ matrix.newlib }}_aarch64
+          path: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}_newlib-${{ matrix.newlib }}_aarch64.tar.gz
+          if-no-files-found: error
+          retention-days: 5
