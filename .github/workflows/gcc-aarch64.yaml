@@ -28,9 +28,12 @@ jobs:
       binutils: ${{ matrix.binutils }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-    
+#      - name: Checkout
+#        uses: actions/checkout@v2
+
+      - name: Add workspace directory to environment, due to no Git checkout
+        run:  echo 'GITHUB_WORKSPACE=$(pwd)' >> $GITHUB_ENV
+
       - name: Add '${{ env.PREFIX }}/bin' to PATH
         run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
 
@@ -76,7 +79,7 @@ jobs:
       - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
         run: |
           cd ${{ env.PREFIX }}
-          tar -czf ${{ github.workspace }}/binutils-${{ matrix.binutils }}.tar.gz .
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/binutils-${{ matrix.binutils }}.tar.gz .
 
       - name: Upload 'binutils ${{ matrix.binutils }}' artifact
         uses: actions/upload-artifact@v2
@@ -114,9 +117,12 @@ jobs:
       gcc:      ${{ matrix.gcc }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-    
+#      - name: Checkout
+#        uses: actions/checkout@v2
+
+      - name: Add workspace directory to environment, due to no Git checkout
+        run:  echo 'GITHUB_WORKSPACE=$(pwd)' >> $GITHUB_ENV
+
       - name: Add '${{ env.PREFIX }}/bin' to PATH
         run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
 
@@ -130,11 +136,11 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: binutils-${{ matrix.binutils }}
-      
+
       - name: Unpack data from 'binutils-${{ matrix.binutils }}.tar.gz'
         run: |
           cd ${{ env.PREFIX }}
-          tar -xzf ${{ github.workspace }}/binutils-${{ matrix.binutils }}.tar.gz
+          tar -xzf ${{ env.GITHUB_WORKSPACE }}/binutils-${{ matrix.binutils }}.tar.gz
 
       - name: Restore gcc download cache (extracted downloads file)
         id:   cache-downloads
@@ -176,26 +182,26 @@ jobs:
       - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
         run: |
           cd ${{ env.PREFIX }}
-          tar -czf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}.tar.gz .
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz .
 
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }}' artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}
-          path: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}.tar.gz
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}
+          path: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz
           if-no-files-found: error
           retention-days: 1
 
       - name: Package data from '${{ env.GCC_BUILD_DIR }}' before artifact upload to preserve file modes (chmod)
         run: |
           cd ${{ env.GCC_BUILD_DIR }}
-          tar -czf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects.tar.gz .
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files.tar.gz .
 
       - name: Upload 'gcc ${{ matrix.gcc }} object files' artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects
-          path: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects.tar.gz
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files
+          path: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files.tar.gz
           if-no-files-found: error
           retention-days: 1
 
@@ -229,9 +235,12 @@ jobs:
       newlib:   ${{ matrix.newlib }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-    
+#      - name: Checkout
+#        uses: actions/checkout@v2
+
+      - name: Add workspace directory to environment, due to no Git checkout
+        run:  echo 'GITHUB_WORKSPACE=$(pwd)' >> $GITHUB_ENV
+
       - name: Add '${{ env.PREFIX }}/bin' to PATH
         run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
 
@@ -244,12 +253,12 @@ jobs:
       - name: Download artifacts from 'gcc (bootstrap)' job
         uses: actions/download-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}
 
-      - name: Unpack data from 'gcc-${{ matrix.binutils }}-${{ matrix.gcc }}.tar.gz'
+      - name: Unpack data from 'gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz'
         run: |
           cd ${{ env.PREFIX }}
-          tar -xzf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}.tar.gz
+          tar -xzf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz
           ls -lAh
 
       - name: Restore newlib cache (extracted downloads file)
@@ -293,13 +302,13 @@ jobs:
       - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
         run: |
           cd ${{ env.PREFIX }}
-          tar -czf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}.tar.gz .
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz .
 
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' artifact
         uses: actions/upload-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}
-          path: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}.tar.gz
+          name: newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}
+          path: newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz
           if-no-files-found: error
           retention-days: 1
 
@@ -333,9 +342,12 @@ jobs:
       newlib:   ${{ matrix.newlib }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-    
+#      - name: Checkout
+#        uses: actions/checkout@v2
+
+      - name: Add workspace directory to environment, due to no Git checkout
+        run:  echo 'GITHUB_WORKSPACE=$(pwd)' >> $GITHUB_ENV
+
       - name: Add '${{ env.PREFIX }}/bin' to PATH
         run:  echo "${PREFIX}/bin" >> $GITHUB_PATH
 
@@ -348,22 +360,22 @@ jobs:
       - name: Download object files from 'gcc-bootstrap' job
         uses: actions/download-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files
 
-      - name: Unpack data from 'gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects.tar.gz'
+      - name: Unpack data from 'gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files.tar.gz'
         run: |
           cd ${{ env.GCC_BUILD_DIR }}
-          tar -xzf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-objects.tar.gz
+          tar -xzf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}-build-files.tar.gz
 
       - name: Download artifacts from 'newlib' job
         uses: actions/download-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}
+          name: newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}
 
-      - name: Unpack data from 'gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}.tar.gz'
+      - name: Unpack data from 'newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz'
         run: |
           cd ${{ env.PREFIX }}
-          tar -xzf gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}.tar.gz
+          tar -xzf newlib-${{ matrix.newlib }}_gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}.tar.gz
 
       - name: Restore gcc download cache (extracted downloads file)
         id:   cache-downloads
@@ -386,7 +398,7 @@ jobs:
       - name: Configure GCC ${{ matrix.gcc }}
         run: |
           cd ${{ env.GCC_BUILD_DIR }}
-          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c,c++ --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
+          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
       - name: Build GCC ${{ matrix.gcc }}
         run: |
@@ -401,12 +413,12 @@ jobs:
       - name: Package data from '${{ env.PREFIX }}' before artifact upload to preserve file modes (chmod)
         run: |
           cd ${{ env.PREFIX }}
-          tar -czf ${{ github.workspace }}/gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-aarch64.tar.gz .
+          tar -czf ${{ env.GITHUB_WORKSPACE }}/gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}_newlib-${{ matrix.newlib }}_aarch64.tar.gz .
 
       - name: Upload 'gcc ${{ matrix.gcc }} incl. binutils ${{ matrix.binutils }} and newlib ${{ matrix.newlib }}' artifact
         uses: actions/upload-artifact@v2
         with:
-          name: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-aarch64
-          path: gcc-${{ matrix.binutils }}-${{ matrix.gcc }}-${{ matrix.newlib }}-aarch64.tar.gz
+          name: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}_newlib-${{ matrix.newlib }}_aarch64
+          path: gcc-${{ matrix.gcc }}_binutils-${{ matrix.binutils }}_newlib-${{ matrix.newlib }}_aarch64.tar.gz
           if-no-files-found: error
           retention-days: 5
