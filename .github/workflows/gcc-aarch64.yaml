@@ -287,7 +287,7 @@ jobs:
       - name: Configure newlib ${{ matrix.newlib }}
         run: |
           cd ${{ env.NEWLIB_BUILD_DIR }}
-          ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX}
+          ../../${NEWLIB_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-multilib
 
       - name: Build newlib ${{ matrix.newlib }}
         run: |
