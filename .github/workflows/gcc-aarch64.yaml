@@ -28,9 +28,7 @@ jobs:
       binutils: ${{ matrix.binutils }}
 
     steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-
+#      Workaround, because 'actions/checkout@v2' does not provide GITHUB_WORKSPACE
       - name: Add workspace directory to environment, due to no Git checkout
         run:  echo "GITHUB_WORKSPACE=$(pwd)" >> $GITHUB_ENV
 
@@ -117,9 +115,7 @@ jobs:
       gcc:      ${{ matrix.gcc }}
 
     steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-
+#      Workaround, because 'actions/checkout@v2' does not provide GITHUB_WORKSPACE
       - name: Add workspace directory to environment, due to no Git checkout
         run:  echo "GITHUB_WORKSPACE=$(pwd)" >> $GITHUB_ENV
 
@@ -235,9 +231,7 @@ jobs:
       newlib:   ${{ matrix.newlib }}
 
     steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-
+#      Workaround, because 'actions/checkout@v2' does not provide GITHUB_WORKSPACE
       - name: Add workspace directory to environment, due to no Git checkout
         run:  echo "GITHUB_WORKSPACE=$(pwd)" >> $GITHUB_ENV
 
@@ -342,9 +336,7 @@ jobs:
       newlib:   ${{ matrix.newlib }}
 
     steps:
-#      - name: Checkout
-#        uses: actions/checkout@v2
-
+#      Workaround, because 'actions/checkout@v2' does not provide GITHUB_WORKSPACE
       - name: Add workspace directory to environment, due to no Git checkout
         run:  echo "GITHUB_WORKSPACE=$(pwd)" >> $GITHUB_ENV
 
@@ -398,7 +390,7 @@ jobs:
       - name: Configure GCC ${{ matrix.gcc }}
         run: |
           cd ${{ env.GCC_BUILD_DIR }}
-          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
+          ../../${GCC_SOURCE_DIR}/configure --target=${TARGET} --prefix=${PREFIX} --enable-languages=c,c++ --with-newlib --disable-shared --with-gnu-as --with-gnu-ld --disable-shared --disable-libssp
 
       - name: Build GCC ${{ matrix.gcc }}
         run: |
